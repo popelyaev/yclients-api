@@ -11,6 +11,9 @@ set -a
 source .env
 set +a
 
+# Проверяет существует ли директория data для json, и если не существует, то создаст ее для записи файлов json
+mkdir -p data
+
 # Response в директорию data для дальнейшей обработки данных взятых из этих json
 $SOURCE_DIR/scripts/get_service_categories.sh
 $SOURCE_DIR/scripts/get_services.sh
