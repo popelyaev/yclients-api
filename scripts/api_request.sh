@@ -70,3 +70,25 @@ api_post_history_client() {
         }"
 
 }
+
+# Получение всех услуг
+api_get_services() {
+
+	# Можно в конце запроса (после /services/) указать id услуши что бы получить конкретную услугу
+	curl -s -X GET "https://api.yclients.com/api/v1/company/$COMPANY_ID/services/" \
+		-H "Accept: application/vnd.yclients.v2+json" \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $YCLIENTS_PARTNER_TOKEN, $YCLIENTS_USER_TOKEN"
+
+}
+
+# Получение всех категорий услуг
+api_get_service_categories() {
+
+	# Можно в конце запроса (после /service_categories/) указать id услуши что бы получить конкретную категорию
+	curl -s -X GET "https://api.yclients.com/api/v1/company/$COMPANY_ID/service_categories/" \
+		-H "Accept: application/vnd.yclients.v2+json" \
+		-H "Content-Type: application/json" \
+		-H "Authorization: Bearer $YCLIENTS_PARTNER_TOKEN, $YCLIENTS_USER_TOKEN"
+
+}
