@@ -44,16 +44,73 @@ for ((i = 0; i < $total; i++)); do
 
 done
 
-# del
-echo $array_object_clients | jq > data/all_object_clients.json
 
 # Фильтрация полученных объектов и создание на их основе нового JSON
 filter_object_clients=$(echo $array_object_clients | jq -f ./filter.jq)
 
-add_category_id=$(jq -s '.[0] as $x | .[1].data as $y | select($x[].service_id == $y[].id) | .' <(echo "$filter_object_clients") <(echo "$all_services"))
+# Добавляем id категории услуги для дальнейшего получения названия категории услуги, а также добавляем продолжительность услуги
+add_category_id=$(jq -s '
+  .[0] as $clients |
+  .[1].data as $services |
 
-echo $add_category_id | jq -s 'length'
+  $clients
+  | map(
+      . as $item
+      | ($services | map(select(.id == $item.service_id))[0]) as $match
+      | if $match then
+          $item + {
+            category_id: $match.category_id,
+            duration: ($match.duration / 60)
+          }
+        else
+          $item
+        end
+    )
+' <(echo "$filter_object_clients") <(echo "$all_services"))
 
-# del Запись фильтрованоого JSON в файл
-echo $filter_object_clients | jq > data/clients_history.json
+# Добавляем название категорий услуги
+add_category_title=$(jq -s '
+  .[0] as $clients |
+  .[1].data as $category_title |
+
+  $clients
+  | map(
+      . as $item
+      | ($category_title | map(select(.id == $item.category_id))[0]) as $match
+      | if $match then
+          $item + {category_title: $match.title}
+        else
+          $item
+        end
+    )
+' <(echo "$add_category_id") <(echo "$all_service_catigories"))
+
+# Создаем csv файл для импорта в google sheets или excel
+echo $add_category_title | jq -r '
+([
+    "ФИО","attendance","Дата","Месяц","Год","Время", "Категория услуги",
+    "Услуга","Цена","Себестоимость","Продолжительность (мин)",
+    "staff_id","staff_name",
+    "category_id","service_id"
+  ] | @csv),
+
+  (.[] | [
+    .name,
+    .attendance,
+    .date,
+    .mounth,
+    .year,
+    .time,
+    .category_title,
+    .title,
+    .price,
+    .cost_price,
+    .duration,
+    .staff.id,
+    .staff.name,
+    .category_id,
+    .service_id
+  ] | @csv)
+' > data.csv
+
 
